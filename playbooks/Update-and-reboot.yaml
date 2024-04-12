@@ -1,6 +1,6 @@
 ---
 - name: Update and upgrade packages and reboot servers
-  hosts: your_target_group
+  hosts: all
   become: yes
   tasks:
     - name: Update package lists
