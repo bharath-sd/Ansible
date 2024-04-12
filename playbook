@@ -1,0 +1,38 @@
+---
+- name: Update and upgrade Ubuntu servers
+  hosts: your_target_group
+  become: yes
+  tasks:
+    - name: Update package lists
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Check NVIDIA GPU status
+      command: nvidia-smi
+      register: gpu_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: Auto-clean apt cache
+      apt:
+        autoclean: yes
+
+    - name: Auto-remove unused packages
+      apt:
+        autoremove: yes
+
+    - name: Install NVIDIA driver version 535
+      apt:
+        name: nvidia-driver-535
+        state: present
+
+    - name: Reboot the server
+      command: reboot
+      async: 0
+      poll: 0
+      ignore_errors: true
