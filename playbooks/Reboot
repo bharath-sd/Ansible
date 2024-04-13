@@ -1,0 +1,6 @@
+---
+- name: Reboot the system
+  hosts: all
+  tasks:
+    - name: Reboot the system
+      command: sudo reboot
