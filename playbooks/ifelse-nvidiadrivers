@@ -1,0 +1,38 @@
+---
+- name: Check NVIDIA drivers and perform actions accordingly
+  hosts: all
+  tasks:
+    - name: Check if nvidia-smi exists
+      shell: nvidia-smi --query-gpu=gpu_name --format=csv,noheader
+      register: nvidia_smi
+      ignore_errors: true
+
+    - name: Reboot if nvidia-smi exists
+      command: sudo reboot
+      when: nvidia_smi.rc == 0
+
+    - name: Remove existing NVIDIA drivers
+      become: true
+      command: sudo apt purge nvidia-*
+      when: nvidia_smi.rc != 0
+
+    - name: Auto-clean
+      become: true
+      command: sudo apt auto-clean
+      when: nvidia_smi.rc != 0
+
+    - name: Auto-remove
+      become: true
+      command: sudo apt auto-remove
+      when: nvidia_smi.rc != 0
+
+    - name: Install NVIDIA driver 535
+      become: true
+      apt:
+        name: nvidia-driver-535
+        state: present
+      when: nvidia_smi.rc != 0
+
+    - name: Reboot after installing drivers
+      command: sudo reboot
+      when: nvidia_smi.rc != 0
