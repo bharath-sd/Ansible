@@ -1,0 +1,43 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Get NVIDIA driver version
+      shell: nvidia-smi | grep 'Driver Version' | awk '{print $NF}'
+      register: driver_version
+
+    - name: Skip reboot if driver version is 535.161
+      debug:
+        msg: "Driver update not required. Rebooting."
+      when: driver_version.stdout == "535.161"
+
+    - name: Uninstall existing NVIDIA drivers
+      apt:
+        name: "{{ item }}"
+        state: purge
+      with_items:
+        - nvidia-*
+        - libnvidia-*
+      when: driver_version.stdout != "535.161"
+
+    - name: Clean package lists
+      apt:
+        name: "*"
+        state: autoclean
+      when: driver_version.stdout != "535.161"
+
+    - name: Remove unused packages
+      apt:
+        name: "*"
+        state: autoremove
+      when: driver_version.stdout != "535.161"
+
+    - name: Install NVIDIA driver version 535
+      apt:
+        name: nvidia-driver-535-server
+        state: present
+      when: driver_version.stdout != "535.161"
+
+    - name: Reboot the system
+      reboot:
+      when: driver_version.stdout != "535.161"
